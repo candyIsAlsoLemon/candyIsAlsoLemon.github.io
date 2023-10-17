@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>굿즈 계산 해봄</title>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+        let setComma = (text) => {
+            if(text == '') return 0;
+            if(!Number.isNaN(text)){
+                text = text.toString();
+            }
+            return text.replace(/(\d)(?=(?:\d{3})+(?!\d))/g, '$1,');
+        }
+        // 추후 script 분리 예정 - 그냥 하드코딩. 어차피 back연결 안할거니까
+        /* 제품 */
+        const productList = [
+            {id : 'aniplus_A1', productName : '트레이딩 홀로그램 원형 캔뱃지 10종', price: 5000, detailType : 'Y', detailTypeIds : '["2","3"]'},
+            {id : 'aniplus_A2', productName : '트레이딩 증명사진 세트 5종(랜덤이라 수량만 입력)', price: 5000, detailType : 'N', detailTypeIds : ''}, // 랜덤이어서 수량으로 수정
+            {id : 'aniplus_A3', productName : '아크릴 스탠드 5종', price: 5000, detailType : 'Y', detailTypeIds : '["1"]'},
+            {id : 'aniplus_A4', productName : '얼굴 마우스패드 5종', price: 6000, detailType : 'Y', detailTypeIds : '["1"]'},
+            {id : 'aniplus_A5', productName : '구슬 키홀더 5종', price: 9000, detailType : 'Y', detailTypeIds : '["1"]'},
+            {id : 'aniplus_A6', productName : '연결 아크릴 키홀더 5종', price: 8000, detailType : 'Y', detailTypeIds : '["1"]'},
+            {id : 'aniplus_A7', productName : '글리터 마스킹 테이프', price: 7000, detailType : 'N', detailTypeIds : ''}, 
+            {id : 'aniplus_A8', productName : '트레이딩 필름 북마크 5종', price: 4000, detailType : 'Y', detailTypeIds : '["1"]'},
+            {id : 'aniplus_A9', productName : '말랑쿠션 5종', price: 28000, detailType : 'Y', detailTypeIds : '["1"]'},
+            {id : 'aniplus_A1', productName : '아크릴 카드 10종', price: 15000, detailType : 'Y', detailTypeIds : '["2","3"]'},
+            {id : 'aniplus_A7', productName : '엽서북', price: 16000, detailType : 'N', detailTypeIds : ''}, 
+            {id : 'aniplus_A9', productName : '아크릴 배경 디오라마 5종', price: 30000, detailType : 'Y', detailTypeIds : '["1"]'},
+        ];
+        // 상세 리스트
+        const detailTypeList = [
+            {id : 1, detailTypeId : '1', detailTypeName : '예준' },
+            {id : 2, detailTypeId : '1', detailTypeName : '노아' },
+            {id : 3, detailTypeId : '1', detailTypeName : '밤비' },
+            {id : 4, detailTypeId : '1', detailTypeName : '은호' },
+            {id : 5, detailTypeId : '1', detailTypeName : '하민' },
+            {id : 6, detailTypeId : '2', detailTypeName : '기다릴게 예준' },
+            {id : 7, detailTypeId : '2', detailTypeName : '기다릴게 노아' },
+            {id : 8, detailTypeId : '2', detailTypeName : '기다릴게 밤비' },
+            {id : 9, detailTypeId : '2', detailTypeName : '기다릴게 은호' },
+            {id : 10, detailTypeId : '2', detailTypeName : '기다릴게 하민' },
+            {id : 11, detailTypeId : '3', detailTypeName : '여섯번째여름 예준' },
+            {id : 12, detailTypeId : '3', detailTypeName : '여섯번째여름 노아' },
+            {id : 13, detailTypeId : '3', detailTypeName : '여섯번째여름 밤비' },
+            {id : 14, detailTypeId : '3', detailTypeName : '여섯번째여름 은호' },
+            {id : 15, detailTypeId : '3', detailTypeName : '여섯번째여름 하민' },
+        ];
+
+        // 계산식
+        let totalPrice = 0;
+        let totalCount = 0;
+
+
+       $(function() {
+            // 초기값
+            productList.forEach((v,i)=>{
+                $('#product').append($('<option>',{value : v.id, text : v.productName, 'data-price' : v.price, 'data-detailtype' : v.detailType, 'data-detailtypeids' : v.detailTypeIds }));
+            });
+
+            // 이벤트
+            $('#product').on('change',function(){
+                $('#productDetail option').remove();
+                $('#productDetail').append($('<option>',{value : '', text : '선택해주세요'}));
+
+                let selected = $('#product option:selected');
+                if(selected.data('detailtype') === 'Y'){
+                   
+                    let detailTypeIds = selected.data('detailtypeids');
+                    console.log(detailTypeIds);
+                    let detailList = detailTypeList.filter(v=>detailTypeIds.includes(v.detailTypeId));
+                    if(detailList.length > 0){
+                        detailList.forEach((v,i) => {
+                            $('#productDetail').append($('<option>',{value : v.id, text : v.detailTypeName}));
+                        });
+                    }
+                    $('#productDetail').show();
+                } else {
+                    $('#productDetail').hide();
+                }
+            });
+            $('#add_btn').on('click',function(){
+                if( $('#product option:selected').val() === ''){
+                    alert('제품을 선택해주세요.')
+                    return;
+                }
+                let tr = $('<tr>');
+                let productName = $('#product option:selected').text();
+                let productTd = $('<td>',{text: productName});
+                tr.append(productTd);
+                let productDetail =  '-';
+                if($('#product option:selected').data('detailtype') === 'Y'){
+                    if( $('#productDetail option:selected').val() === ''){
+                    alert('제품상세를 선택해주세요.')
+                    return;
+                }
+                    productDetail =  $('#productDetail option:selected').text();
+                }
+                let productDetailTd = $('<td>',{text: productDetail});
+                tr.append(productDetailTd);
+              
+
+                let amount = parseInt($('#amount').val());
+                tr.append($('<td>',{text:  setComma(amount) + '개'}));
+
+                let price = parseInt($('#product option:selected').data('price'));
+                let productPrice = price*amount;
+                totalPrice += productPrice;
+                totalCount += amount;
+                tr.append($('<td>',{text:  setComma(productPrice) + '원'}));
+                let deleteBtn = $('<input>',{type : 'button',value : 'X', class : 'delete'});
+                let hiddenAmount = $('<input>',{type : 'hidden', value: amount, name : 'amount'});
+                let hiddenPrice = $('<input>',{type : 'hidden', value: productPrice, name : 'price'});
+                deleteBtn.on('click',function(){
+                    let deleteAmount = $(this).siblings('[name=amount]').val();
+                    let deletePrice = $(this).siblings('[name=price]').val();
+                    totalPrice -= deletePrice;
+                    totalCount -= deleteAmount;
+                    $('#totalCount').text(setComma(totalCount) + '개');
+                    $('#totalPrice').text(setComma(totalPrice) + '원');
+                    $(this).parents('tr').remove();
+                });
+                let deleteTd = $('<td>');
+                deleteTd.append(hiddenAmount);
+                deleteTd.append(hiddenPrice);
+                deleteTd.append(deleteBtn);
+                tr.append(deleteTd);
+                $('#tbody').append(tr);
+
+                $('#totalCount').text(setComma(totalCount) + '개');
+                $('#totalPrice').text(setComma(totalPrice) + '원');
+            });            
+       });
+    </script>
+</head>
+
+<body>
+    <legend>엑셀로 계산하기 귀찮아서 대충 만들어보았습니다. 정확하지 않을 수 있으니 참고용으로만 사용해주세요.</legend>
+    <!-- 굿즈 제품명 -->
+    <select id="product">
+        <option value="">선택해주세요</option>
+    </select>
+    <select id="productDetail">
+        <option value="">선택해주세요</option>
+    </select>
+    <input type="number" id="amount" value="1">
+    <input type="button" id="add_btn" value="추가"/>
+    <br/>
+    <div id="productListDiv">
+        <table>
+            <thead>
+                <th>상품명</th>
+                <th>상품상세명</th>
+                <th>수량</th>
+                <th>금액</th>
+                <th></th>
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+        </table>
+    </div>
+    <div id="total">
+        <div id="totalCount">0개</div>
+        <div id="totalPrice">0원</div>
+    </div>
+</body>
+
+</html>
